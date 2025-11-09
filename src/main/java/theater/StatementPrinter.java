@@ -23,29 +23,43 @@ public class StatementPrinter {
      * @throws RuntimeException if one of the play types is not known
      */
     public String statement() {
-        int totalAmount = 0;
-        int volumeCredits = 0;
         // put private for result frmt and play
         final StringBuilder result = new StringBuilder("Statement for " + invoice.getCustomer()
                 + System.lineSeparator());
 
+        // First loop: Calculate volume credits
+
+        // Second loop: Calculate total amount
+
+        // Third loop: Build string
         for (Performance performance : invoice.getPerformances()) {
             final Play getPlay = plays.get(performance.getPlayID());
             final int rslt = getAmount(performance);
-
-            // add volume credits
-            volumeCredits += getVolumeCredits(performance, getPlay);
-
-            // print line for this order
-            // magic number 100 change to Percent_factor
             result.append(String.format("  %s: %s (%s seats)%n", getPlay.getName(),
-                    usd(getAmount(performance)), performance.getAudience()));
-            totalAmount += rslt;
+                    usd(rslt), performance.getAudience()));
         }
         // magic number 100 change to percent factor
-        result.append(String.format("Amount owed is %s%n", usd(totalAmount)));
-        result.append(String.format("You earned %s credits%n", volumeCredits));
+        result.append(String.format("Amount owed is %s%n", usd(getTotalAmount())));
+        result.append(String.format("You earned %s credits%n", getTotalVolumeCredits()));
         return result.toString();
+    }
+
+    private int getTotalAmount() {
+        int totalAmount = 0;
+        for (Performance performance : invoice.getPerformances()) {
+            final int rslt = getAmount(performance);
+            totalAmount += rslt;
+        }
+        return totalAmount;
+    }
+
+    private int getTotalVolumeCredits() {
+        int volumeCredits = 0;
+        for (Performance performance : invoice.getPerformances()) {
+            final Play getPlay = plays.get(performance.getPlayID());
+            volumeCredits += getVolumeCredits(performance, getPlay);
+        }
+        return volumeCredits;
     }
 
     private static String usd(int totalAmount) {
